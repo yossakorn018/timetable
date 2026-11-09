@@ -1,0 +1,229 @@
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <h1>ระบบจัดตารางสอนอัตโนมัติ</h1>
+        <span class="tag">ต้นแบบซ้อมแข่งทักษะ · เทคโนโลยีปัญญาประดิษฐ์ ปวส.</span>
+      </div>
+      <div class="row" style="gap:12px">
+        <div class="dataset-pill" id="datasetPill"></div>
+        <div class="userchip" id="userChip" hidden></div>
+      </div>
+    </div>
+    <nav class="steps" id="steps" aria-label="เมนู" hidden>
+      <a href="#data" data-view="data"><span class="n">1</span>ข้อมูลนำเข้า</a>
+      <a href="#settings" data-view="settings"><span class="n">2</span>ตั้งค่าเงื่อนไข</a>
+      <a href="#run" data-view="run"><span class="n">3</span>จัดตาราง</a>
+      <a href="#check" data-view="check"><span class="n">4</span>ตรวจ 15 ข้อ</a>
+      <a href="#table" data-view="table"><span class="n">5</span>ตารางสอน</a>
+      <a href="#stats" data-view="stats"><span class="n">6</span>ภาระและการใช้ห้อง</a>
+      <a href="#unavail" data-view="unavail"><span class="n">+</span>เวลาไม่สะดวก</a>
+      <a href="#users" data-view="users"><span class="n">+</span>บัญชีผู้ใช้</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- เข้าสู่ระบบ -->
+  <section class="view" id="view-login" hidden>
+    <div class="login">
+      <form class="panel stack" id="loginForm" autocomplete="off">
+        <h2>เข้าสู่ระบบ</h2>
+        <p class="muted" style="font-size:13.5px">สิทธิ์แบ่งเป็น 3 บทบาท: ผู้ดูแลระบบ (Admin) ครู (Teacher) และนักเรียน (Student)</p>
+        <label class="field">ชื่อผู้ใช้<input type="text" id="loginUser" autocapitalize="off" spellcheck="false" required></label>
+        <label class="field">รหัสผ่าน<input type="password" id="loginPass" required></label>
+        <p class="login-err" id="loginErr" role="alert" hidden></p>
+        <button class="primary" type="submit" id="loginBtn">เข้าสู่ระบบ</button>
+      </form>
+      <div class="panel stack">
+        <h3>บัญชีทดลอง</h3>
+        <p class="muted" style="font-size:13px">สำหรับกรรมการและการซ้อม กดเพื่อกรอกให้อัตโนมัติ แล้วกดเข้าสู่ระบบ</p>
+        <div class="demo-accounts" id="demoAccounts"></div>
+        <p class="muted" style="font-size:12.5px">ครูทุกคนใช้ชื่อผู้ใช้ตามรหัสครู (เช่น t05) และนักเรียนใช้รหัสกลุ่ม (เช่น g03) รหัสผ่านเริ่มต้น 1234 ผู้ดูแลเปลี่ยนได้ในหน้าบัญชีผู้ใช้</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 1 ข้อมูล -->
+  <section class="view" id="view-data" hidden>
+    <div class="view-head">
+      <div><h2>ข้อมูลนำเข้า</h2><p>นำเข้าไฟล์ CSV หรือ Excel ตามโครงสร้างโจทย์ 7 ตาราง ดูพรีวิวและผลตรวจก่อนบันทึก แล้วเพิ่มหรือแก้ข้อมูลต่อได้ในหน้านี้ ไม่ต้องแก้ไฟล์ใหม่</p></div>
+    </div>
+    <div class="panel stack">
+      <h3>ชุดข้อมูลตัวอย่าง (ข้อมูลสมมติ)</h3>
+      <div class="samples" id="samples"></div>
+    </div>
+    <div class="grid2">
+      <div class="panel stack">
+        <h3>นำเข้าไฟล์ของโจทย์</h3>
+        <div class="drop" id="drop">
+          <p>ลากไฟล์มาวาง หรือเลือกไฟล์ (เลือกได้หลายไฟล์พร้อมกัน)</p>
+          <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls">
+          <p class="muted" style="font-size:12.5px">ตั้งชื่อไฟล์ตามตาราง เช่น <code>room.csv</code> หรือใช้ Excel ไฟล์เดียวที่มีชีตชื่อ room, subject, …</p>
+        </div>
+      </div>
+      <div class="panel stack">
+        <h3>ไฟล์แม่แบบ</h3>
+        <p class="muted" style="font-size:13.5px">หัวคอลัมน์ตรงกับโจทย์ทุกตัวอักษร พร้อมตัวอย่าง 2 แถวต่อตาราง</p>
+        <div class="row">
+          <button id="tplXlsx">แม่แบบ Excel (7 ชีต)</button>
+          <select id="tplTable" aria-label="เลือกตาราง"></select>
+          <button id="tplCsv">แม่แบบ CSV</button>
+        </div>
+        <p class="muted" id="dlNote" style="font-size:12.5px" hidden></p>
+      </div>
+    </div>
+    <div id="stagedBox"></div>
+    <div class="panel stack" id="editorPanel">
+      <div class="row" style="justify-content:space-between">
+        <div><h3>แก้ไขข้อมูล</h3><p class="muted" id="dataSource" style="font-size:13px"></p></div>
+        <div class="row">
+          <input type="search" id="edSearch" placeholder="ค้นหาในตารางนี้" aria-label="ค้นหาในตาราง">
+          <button id="edAdd">+ เพิ่มแถว</button>
+        </div>
+      </div>
+      <div class="chips" id="tableChips"></div>
+      <div class="savebar" id="saveBar" hidden>
+        <span>มีการแก้ไขที่ยังไม่บันทึก</span>
+        <div class="row"><button id="edCancel">ยกเลิกการแก้ไข</button><button class="primary" id="edSave">บันทึกและจัดตารางใหม่</button></div>
+      </div>
+      <div class="tablebox scroll" id="editorGrid" style="max-height:480px"></div>
+      <h3 style="margin-top:6px">ผลตรวจข้อมูลก่อนคำนวณ</h3>
+      <div class="issues" id="issues"></div>
+    </div>
+  </section>
+
+  <!-- 2 ตั้งค่า -->
+  <section class="view" id="view-settings" hidden>
+    <div class="view-head">
+      <div><h2>ตั้งค่าเงื่อนไข</h2><p>ค่าที่อาจเปลี่ยนตามโจทย์อยู่ที่นี่ทั้งหมด ไม่ได้เขียนตายตัวในโค้ด ถ้าโจทย์วันแข่งต่างไป ให้แก้ที่หน้านี้แล้วจัดตารางใหม่</p></div>
+      <div class="row"><button id="resetCfg">คืนค่าเริ่มต้น</button><button class="primary" id="applyCfg">ใช้ค่านี้</button></div>
+    </div>
+    <div class="panel"><div class="fields" id="cfgFields"></div></div>
+    <div class="panel stack">
+      <div class="row" style="justify-content:space-between">
+        <h3>ประเภทและการแบ่งคาบของแต่ละวิชา</h3>
+        <span class="muted" style="font-size:13px">แยกประเภทจากชื่อวิชาก่อน (กิจกรรม → โฮมรูม → IOT) แล้วค่อยดูรหัสวิชาสามัญ · เลือกได้ว่าจะเรียนยาวต่อเนื่องหรือแบ่งเป็นช่วง เช่น 5 คาบ = 3+2</span>
+      </div>
+      <div class="row"><input type="search" id="subjFilter" placeholder="ค้นหารหัสหรือชื่อวิชา" aria-label="ค้นหาวิชา"><span class="legend" id="typeCounts"></span></div>
+      <div class="tablebox scroll"><table class="data" id="classifyTable"></table></div>
+    </div>
+  </section>
+
+  <!-- 3 จัดตาราง -->
+  <section class="view" id="view-run" hidden>
+    <div class="view-head">
+      <div><h2>จัดตาราง</h2><p>รันวิธีพื้นฐาน วิธี Heuristic และ Heuristic + วงรอบซ่อม ด้วยข้อมูลชุดเดียวกัน แล้วเทียบผลด้วยตัวตรวจ 15 ข้อ</p></div>
+    </div>
+    <div id="runBanner"></div>
+    <div class="panel runbar">
+      <div class="row">
+        <label class="field">Seed<input type="number" id="seed" min="0" step="1"></label>
+        <label class="field">จำนวนรอบ<input type="number" id="runs" min="1" max="200" step="1"></label>
+        <label class="check" style="align-self:end;padding-bottom:7px"><input type="checkbox" id="useRepair" checked> ใช้วงรอบซ่อม (plan-act-check)</label>
+        <div class="row" style="align-self:end;margin-left:auto">
+          <button class="primary" id="runBtn">จัดตาราง</button>
+          <button class="danger" id="cancelBtn" hidden>ยกเลิก</button>
+          <button id="retryBtn" title="รันใหม่ด้วย seed ชุดถัดไป">ลองใหม่ด้วย seed ใหม่</button>
+        </div>
+      </div>
+      <div class="progress" aria-hidden="true"><div id="progBar"></div></div>
+      <p class="status-line" id="runStatus" aria-live="polite"></p>
+    </div>
+    <div class="panel stack">
+      <h3>เทียบผลกับวิธีพื้นฐาน</h3>
+      <div class="tablebox"><table class="data" id="compareTable"></table></div>
+      <p class="muted" style="font-size:12.5px">วิธีพื้นฐาน = จัดตามลำดับในไฟล์ ลงช่องแรกที่ว่าง ไม่สุ่ม · Heuristic = จัดวิชาที่มีข้อจำกัดมากก่อน แล้วเลือกช่องที่คะแนนโทษต่ำสุด · คะแนนคุณภาพยิ่งน้อยยิ่งดี</p>
+    </div>
+    <div class="grid2">
+      <div class="panel stack"><h3>บันทึกวงรอบซ่อม</h3><div id="repairLog"></div></div>
+      <div class="panel stack"><h3>วิชาที่วางไม่ได้</h3><div id="unscheduled"></div></div>
+    </div>
+    <div class="panel stack">
+      <h3>ผลแต่ละรอบ (seed)</h3>
+      <div class="tablebox scroll" style="max-height:300px"><table class="data" id="historyTable"></table></div>
+    </div>
+  </section>
+
+  <!-- 4 ตรวจ -->
+  <section class="view" id="view-check" hidden>
+    <div class="view-head">
+      <div><h2>ตรวจ 15 เงื่อนไข</h2><p>ตัวตรวจแยกจากตัวจัดตาราง ตรวจผลลัพธ์ทุกแถวกับข้อมูลโจทย์ กดที่เงื่อนไขเพื่อดูรายการที่ผิดและวิธีแก้</p></div>
+      <div class="seg" id="checkWhich"></div>
+    </div>
+    <div class="summary-strip" id="checkSummary"></div>
+    <div class="rules" id="rules"></div>
+  </section>
+
+  <!-- 5 ตาราง -->
+  <section class="view" id="view-table" hidden>
+    <div class="view-head">
+      <div><h2>ตารางสอน</h2><p>ลากวิชาไปช่องว่างเพื่อย้าย หรือวางทับวิชาอื่นเพื่อสลับ ระบบตรวจเงื่อนไขให้ก่อนวางทุกครั้ง บนมือถือให้แตะวิชาแล้วแตะช่องปลายทาง</p></div>
+      <div class="row" id="exportRow">
+        <button id="exXlsx">Excel ทั้งหมด</button>
+        <button id="exCsv">output.csv</button>
+        <button id="exHtml" title="เปิดไฟล์แล้วสั่งพิมพ์เป็น PDF">ตารางนี้ (พร้อมพิมพ์)</button>
+      </div>
+    </div>
+    <div class="panel stack">
+      <div class="picker">
+        <div class="seg" id="ttMode"></div>
+        <label class="field">เลือก<select id="ttEntity"></select></label>
+        <label class="field">ค้นหาวิชา / ครู / ห้อง<input type="search" id="ttSearch" placeholder="เช่น IOT หรือ T05"></label>
+      </div>
+<div id="ttBanner"></div>
+      <div class="editbar" id="editBar"></div>
+      <div class="legend" id="ttLegend"></div>
+      <div class="dragbar" id="dragBar" hidden></div>
+      <div class="tablebox" style="border:0;background:transparent"><table class="tt" id="tt"></table></div>
+      <p class="muted" id="ttNote" style="font-size:12.5px"></p>
+    </div>
+  </section>
+
+  <!-- แจ้งเวลาไม่สะดวก -->
+  <section class="view" id="view-unavail" hidden>
+    <div class="view-head">
+      <div><h2>แจ้งเวลาไม่สะดวกสอน</h2><p>แตะช่องเพื่อสลับ สะดวก / ไม่สะดวก แล้วกดบันทึก ระบบจะไม่จัดวิชาลงช่องที่ไม่สะดวกในการจัดตารางครั้งถัดไป และห้ามลากวิชาไปวางทับ</p></div>
+      <div class="row"><label class="field" id="unTeacherWrap" hidden>ครู<select id="unTeacher"></select></label><button id="unClear">ล้างทั้งหมด</button><button class="primary" id="unSave">บันทึก</button></div>
+    </div>
+    <div class="panel stack">
+      <div class="legend"><span class="type" style="background:var(--bad-soft);color:var(--bad)">ไม่สะดวก</span><span class="type type-practice">มีสอนอยู่</span><span class="type" style="background:var(--bad);color:#fff">มีสอนแต่แจ้งไม่สะดวก (ต้องจัดใหม่)</span></div>
+      <div class="tablebox" style="border:0;background:transparent"><table class="tt unav" id="unGrid"></table></div>
+      <p id="unNote" style="font-size:13.5px"></p>
+    </div>
+  </section>
+
+  <!-- บัญชีผู้ใช้ -->
+  <section class="view" id="view-users" hidden>
+    <div class="view-head">
+      <div><h2>บัญชีผู้ใช้</h2><p>ครูและนักเรียนได้บัญชีอัตโนมัติจากข้อมูลครูและกลุ่มเรียน รหัสผ่านเก็บเป็นค่า hash (SHA-256 + salt) ไม่เก็บรหัสจริง</p></div>
+    </div>
+    <div class="summary-strip" id="userSummary"></div>
+    <form class="panel row" id="addUserForm" autocomplete="off">
+      <label class="field">ชื่อผู้ใช้<input type="text" id="nuName" required autocapitalize="off" spellcheck="false"></label>
+      <label class="field">บทบาท<select id="nuRole"><option value="admin">Admin</option><option value="teacher">Teacher</option><option value="student">Student</option></select></label>
+      <label class="field">ผูกกับ<select id="nuLink"></select></label>
+      <label class="field">รหัสผ่าน<input type="text" id="nuPass" value="1234" required></label>
+      <button class="primary" type="submit" style="align-self:end">เพิ่มบัญชี</button>
+    </form>
+    <div class="panel stack">
+      <div class="row"><input type="search" id="userSearch" placeholder="ค้นหาชื่อผู้ใช้ ชื่อ หรือรหัส" aria-label="ค้นหาบัญชี"><div class="seg" id="userRoleFilter"></div></div>
+      <div class="tablebox scroll" style="max-height:520px"><table class="data" id="userTable"></table></div>
+    </div>
+  </section>
+
+  <!-- 6 สถิติ -->
+  <section class="view" id="view-stats" hidden>
+    <div class="view-head">
+      <div><h2>ภาระครูและการใช้ห้อง</h2><p>ตัวชี้วัดช่วยตัดสินใจ เช่น ครูคนไหนสอนหนัก ห้องไหนว่างมาก กลุ่มไหนเรียนหนักวันใด</p></div>
+    </div>
+    <div class="summary-strip" id="statSummary"></div>
+    <div class="grid2">
+      <div class="panel stack"><h3>ภาระสอนต่อสัปดาห์ (คาบ)</h3><div class="legend"><span><span class="type" style="background:var(--accent);color:var(--accent-ink)">ครู</span></span><span><span class="type" style="background:var(--mark);color:#2a1d00">หัวหน้า (Manager)</span></span></div><div class="hbars scroll" id="teacherBars"></div></div>
+      <div class="panel stack"><h3>อัตราการใช้ห้อง (% ของช่องเรียน)</h3><div class="hbars scroll" id="roomBars"></div></div>
+    </div>
+    <div class="panel stack"><h3>จำนวนคาบต่อวันของแต่ละกลุ่ม</h3><div class="tablebox scroll"><table class="data heat" id="groupDays"></table></div></div>
+  </section>
+</main>
+<footer class="wrap">ต้นแบบนี้ทำงานในเบราว์เซอร์ทั้งหมด ข้อมูลตัวอย่างเป็นข้อมูลสมมติ · ผลลัพธ์รันซ้ำด้วย seed เดิมได้ผลเดิมทุกครั้ง · การตรวจสิทธิ์ในต้นแบบทำในเบราว์เซอร์ ตอนต่อฐานข้อมูลจริงต้องตรวจซ้ำฝั่งเซิร์ฟเวอร์ (Supabase RLS)</footer>
+<div class="toast" id="toast" hidden></div>
